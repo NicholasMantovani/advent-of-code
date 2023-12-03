@@ -54,10 +54,11 @@ func findValidNumbers(input []string) []int {
 	validNumbers := []int{}
 	
 	for i, line := range input {
-		fmt.Println("Line:", line)
 		numbersInLine := findAllNumbersInLine(line)
+
 		var indexOfSymbolsInLineBefore = []int{}
 		var indexOfSymbolsInLineAfter = []int{}
+		var first, last = 0, 0
 
 		if i != 0 {
 			// i don't need to check the line before this
@@ -70,41 +71,44 @@ func findValidNumbers(input []string) []int {
 		}
 
 		for _, number := range numbersInLine {
-			first, last := findFirstAndLastIndexOfString(number, line)
+			first, last = findFirstAndLastIndexOfString(number, line)
 			numberInt, _ := strconv.Atoi(number)
 
 			// Finds the value in the current line
 			if first != 0 {
 				if isRuneAValidSymbols(rune(line[first-1])) {
 					validNumbers = append(validNumbers, numberInt)
-					fmt.Println("First case", numberInt)
+					line = removeCheckedIndexesFromString(first, last, line)
+
 					continue
 				}
 			}
 			if last != len(line)-1 {
 				if isRuneAValidSymbols(rune(line[last+1])) {
 					validNumbers = append(validNumbers, numberInt)
-					fmt.Println("Second case", numberInt)
+					line = removeCheckedIndexesFromString(first, last, line)
+
 					continue
 				}
 			}
 
-			// add tresholds to indexes (1 per side)
-			first -= 1
-			last += 1
 
 			// Find value in the before and after line
-			if isNumberIndexInArrayOfIndexes(first, last, indexOfSymbolsInLineBefore) {
+			if isNumberIndexInArrayOfIndexes(first - 1, last + 1, indexOfSymbolsInLineBefore) {
 				validNumbers = append(validNumbers, numberInt)
-				fmt.Println("Third case", numberInt)
+				line = removeCheckedIndexesFromString(first, last, line)
+
 				continue
 			}
 
-			if isNumberIndexInArrayOfIndexes(first, last, indexOfSymbolsInLineAfter) {
+			if isNumberIndexInArrayOfIndexes(first - 1, last + 1, indexOfSymbolsInLineAfter) {
 				validNumbers = append(validNumbers, numberInt)
-				fmt.Println("Fourth case", numberInt)
+				line = removeCheckedIndexesFromString(first, last, line)
+
 				continue
 			}
+			line = removeCheckedIndexesFromString(first, last, line)
+
 		}
 	}
 
@@ -156,4 +160,20 @@ func isNumberIndexInArrayOfIndexes(first, last int, symbolsIndexes []int) bool {
 		}
 	}
 	return false
+}
+
+func removeCheckedIndexesFromString(first, last int, line string) string {
+	count := first
+	for count <= last {
+		line = replaceAt(line, count, '.')
+		count++
+	}
+	return line
+}
+
+
+func replaceAt(s string, i int, c rune) string {
+    r := []rune(s)
+    r[i] = c
+    return string(r)
 }
